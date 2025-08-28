@@ -28,7 +28,22 @@ public class Board {
 
     // TODO: NEED TO IMPLEMENT
     public MoveValidationResult validateMove(Move move) {
-        // if (!isPieceOwnedByPlayer(move)) return MoveValidationResult.illegal("Cannot move opponent's piece");
+        final Square from = move.getFrom();
+
+        final Piece piece = getPieceAt(from);
+
+        if (piece == null) {
+            return MoveValidationResult.illegal("No piece is at " + from);
+        }
+
+        if (piece.getColor() != move.getPlayerColor()) {
+            return MoveValidationResult.illegal("Cannot move piece of different color");
+        }
+
+        if (!piece.getLegalMoves(this, from).contains(move)) {
+            return MoveValidationResult.illegal("Illegal move");
+        }
+
         return MoveValidationResult.legal();
     }
 

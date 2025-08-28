@@ -1,9 +1,15 @@
 package chess.pieces;
 
+import chess.Board;
 import chess.Color;
+import chess.Move;
+import chess.Square;
+
+import java.util.List;
+import java.util.Objects;
 
 public abstract class Piece implements Cloneable{
-    private final Color color;
+    protected final Color color;
     private final char symbol;
 
     protected Piece(Color color, char symbol) {
@@ -31,6 +37,8 @@ public abstract class Piece implements Cloneable{
         return symbol;
     }
 
+    public abstract List<Move> getLegalMoves(Board board, Square from);
+
     @Override
     public Piece clone() {
         try {
@@ -38,5 +46,18 @@ public abstract class Piece implements Cloneable{
         } catch (CloneNotSupportedException e) {
             throw new AssertionError("Clone not supported", e);
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Piece other = (Piece) obj;
+        return color == other.color && symbol == other.symbol;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(color, symbol);
     }
 }
