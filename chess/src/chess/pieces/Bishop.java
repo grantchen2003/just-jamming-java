@@ -6,6 +6,7 @@ import chess.Move;
 import chess.Square;
 
 import java.util.List;
+import java.util.Optional;
 
 public class Bishop extends Piece{
     public static final char SYMBOL = 'B';
@@ -15,7 +16,11 @@ public class Bishop extends Piece{
     }
 
     @Override
-    public List<Move> getLegalMoves(Board board, Square from) {
-        return List.of();
+    public boolean canMakeMove(Board board, Move move) {
+        final List<Optional<List<Square>>> pathOptions = List.of(
+                Square.getDiagonalPath(move.getFrom(), move.getTo())
+        );
+
+        return canMoveWithPaths(board, move, pathOptions);
     }
 }

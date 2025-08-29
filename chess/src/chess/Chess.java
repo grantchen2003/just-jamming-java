@@ -9,7 +9,7 @@ public class Chess {
         final Board board = new Board();
 
         for (int i = 0;; i++) {
-            System.out.println(board);
+            System.out.print(board);
 
             final Player currentPlayer = players.get(i % players.size());
 
@@ -32,7 +32,7 @@ public class Chess {
             }
 
             if (board.checkmateIsPresent()) {
-                System.out.printf("%s won!", currentPlayer.getColor());
+                System.out.printf("%s won!", currentPlayer.color());
                 System.out.println(board.getMoveHistory());
                 return;
             }

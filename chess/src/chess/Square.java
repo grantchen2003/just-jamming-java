@@ -1,67 +1,97 @@
 package chess;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
-public class Square {
-    private final char file;
-    private final int rank;
-
-    public Square(String square) {
-        if (square.length() != 2) {
-            throw new IllegalArgumentException("");
-        }
-
-        final char file = square.charAt(0);
+public record Square(char file, int rank) {
+    public Square {
         if (!isValidFile(file)) {
             throw new IllegalArgumentException(String.format("'%c' is not a valid file", file));
         }
 
-        final int rank = Character.getNumericValue(square.charAt(1));
         if (!isValidRank(rank)) {
             throw new IllegalArgumentException(String.format("'%d' is not a valid rank", rank));
         }
+    }
 
-        this.file = file;
-        this.rank = rank;
+    public Square(String square) {
+        if (square == null) {
+            throw new IllegalArgumentException("Square string cannot be null");
+        }
+
+        if (square.length() != 2) {
+            throw new IllegalArgumentException("Square string must be 2 characters long");
+        }
+
+        final char file = square.charAt(0);
+        final int rank = Character.digit(square.charAt(1), 10);
+
+        this(file, rank);
     }
 
     public static Square copyOf(Square other) {
-        return new Square(other.toString());
+        return new Square(other.file, other.rank);
     }
 
-    public static Optional<Square> offset(Square square, int fileOffset, int rankOffset) {
-        final char newFile = (char) (square.getFile() + fileOffset);
-        final int newRank = square.getRank() + rankOffset;
+    public static Optional<List<Square>> getDiagonalPath(Square from, Square to) {
+        final SquareOffset squareOffset = SquareOffset.getOffset(from, to);
+        return squareOffset.isDiagonalOffset() ? getStraightPath(from, to) : Optional.empty();
+    }
+
+    public static Optional<List<Square>> getFilePath(Square from, Square to) {
+        final SquareOffset squareOffset = SquareOffset.getOffset(from, to);
+        return squareOffset.isOnlyFileOffset() ? getStraightPath(from, to) : Optional.empty();
+    }
+
+    public static Optional<List<Square>> getRankPath(Square from, Square to) {
+        final SquareOffset squareOffset = SquareOffset.getOffset(from, to);
+        return squareOffset.isOnlyRankOffset() ? getStraightPath(from, to) : Optional.empty();
+    }
+
+    private static Optional<List<Square>> getStraightPath(Square from, Square to) {
+        final SquareOffset squareOffset = SquareOffset.getOffset(from, to);
+
+        if (!squareOffset.isDiagonalOffset() && !squareOffset.isOnlyFileOffset() && !squareOffset.isOnlyRankOffset()) {
+            return Optional.empty();
+        }
+
+        final int unitFileOffset = Integer.signum(squareOffset.fileOffset());
+        final int unitRankOffset = Integer.signum(squareOffset.rankOffset());
+        final int pathLength = Math.max(Math.abs(squareOffset.fileOffset()), Math.abs(squareOffset.rankOffset()));
+
+        final List<Square> path = new ArrayList<>();
+        for (int i = 0; i <= pathLength; i++) {
+            final int fileOffset = i * unitFileOffset;
+            final int rankOffset = i * unitRankOffset;
+
+            final Optional<Square> squareOptional = from.offsetBy(new SquareOffset(fileOffset, rankOffset));
+            if (squareOptional.isEmpty()) {
+                return Optional.empty();
+            }
+
+            path.add(squareOptional.get());
+        }
+
+        return Optional.of(path);
+    }
+
+    public Optional<Square> offsetBy(SquareOffset squareOffset) {
+        return offsetBy(squareOffset.fileOffset(), squareOffset.rankOffset());
+    }
+
+    public Optional<Square> offsetBy(int fileOffset, int rankOffset) {
+        final char newFile = (char) (file+ fileOffset);
+        final int newRank = rank + rankOffset;
+
         return isValidFile(newFile) && isValidRank(newRank)
-                ? Optional.of(new Square(String.format("%c%d", newFile, newRank)))
+                ? Optional.of(new Square(newFile, newRank))
                 : Optional.empty();
-    }
-
-    public char getFile() {
-        return file;
-    }
-
-    public int getRank() {
-        return rank;
     }
 
     @Override
     public String toString() {
         return String.format("%c%d", file, rank);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true; // same reference
-        if (obj == null || getClass() != obj.getClass()) return false;
-        Square other = (Square) obj;
-        return file == other.file && rank == other.rank;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(file, rank);
     }
 
     private static boolean isValidFile(char file) {

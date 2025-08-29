@@ -1,12 +1,11 @@
 package chess.pieces;
 
-import chess.Board;
-import chess.Color;
-import chess.Move;
-import chess.Square;
+import chess.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 public abstract class Piece {
     protected final Color color;
@@ -41,7 +40,7 @@ public abstract class Piece {
         return symbol;
     }
 
-    public abstract List<Move> getLegalMoves(Board board, Square from);
+    public abstract boolean canMakeMove(Board board, Move move);
 
     @Override
     public boolean equals(Object obj) {
@@ -54,5 +53,58 @@ public abstract class Piece {
     @Override
     public int hashCode() {
         return Objects.hash(color, symbol);
+    }
+
+    protected boolean canMoveWithOffsets(Board board, Move move, Set<SquareOffset> squareOffsets) {
+        final SquareOffset squareOffset = SquareOffset.getOffset(move.getFrom(), move.getTo());
+        if (!squareOffsets.contains(squareOffset)) {
+            return false;
+        }
+
+        return isLegalAfterMove(board, move);
+    }
+
+    protected boolean canMoveWithPaths(Board board, Move move, List<Optional<List<Square>>> pathOptions) {
+        final long presentPathCount = pathOptions.stream().filter(Optional::isPresent).count();
+        if (presentPathCount != 1) {
+            return false;
+        }
+
+        final List<Square> path = pathOptions.stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No path present"));
+
+        final List<Square> pathExcludingEndpoints = path.stream()
+                .filter(s -> !s.equals(move.getFrom()) && !s.equals(move.getTo()))
+                .toList();
+
+        if (!board.squaresAreEmpty(pathExcludingEndpoints)) {
+            return false;
+        }
+
+        return isLegalAfterMove(board, move);
+    }
+
+    private boolean isLegalAfterMove(Board board, Move move) {
+        final Optional<Piece> pieceAtDestination = board.getPieceAt(move.getTo());
+        if (pieceAtDestination.isPresent() && pieceAtDestination.get().getColor() == color) {
+            return false;
+        }
+
+        final Optional<Piece> pieceToMoveOptional = board.removePieceAt(move.getFrom());
+        if (pieceToMoveOptional.isEmpty()) {
+            return false;
+        }
+
+        final Piece pieceToMove = pieceToMoveOptional.get();
+        if (pieceToMove.color != color) {
+            return false;
+        }
+
+        board.setPieceAt(move.getTo(), Piece.copyOf(pieceToMove));
+
+        return !board.kingIsUnderAttack(color);
     }
 }
