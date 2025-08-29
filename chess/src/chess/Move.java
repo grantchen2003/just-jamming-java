@@ -11,7 +11,7 @@ public class Move {
     private final Square to;
     private final Piece promotionPiece;
 
-    Move(Color playerColor, String uciNotation) throws InvalidUCINotationException {
+    public Move(Color playerColor, String uciNotation) throws InvalidUCINotationException {
         this.playerColor = playerColor;
 
         if (uciNotation.length() != 4 && uciNotation.length() != 5) {
@@ -37,20 +37,31 @@ public class Move {
         }
     }
 
+    private Move(Color playerColor, Square from, Square to, Piece promotionPiece) {
+        this.playerColor = playerColor;
+        this.from = Square.copyOf(from);
+        this.to = Square.copyOf(to);
+        this.promotionPiece = Piece.copyOf(promotionPiece);
+    }
+
+    public static Move copyOf(Move other) {
+        return new Move(other.playerColor, other.from, other.to, other.promotionPiece);
+    }
+
     public Color getPlayerColor() {
         return playerColor;
     }
 
     public Square getFrom() {
-        return from;
+        return Square.copyOf(from);
     }
 
     public Square getTo() {
-        return to;
+        return Square.copyOf(to);
     }
 
     public Optional<Piece> getPromotionPiece() {
-        return Optional.ofNullable(promotionPiece);
+        return Optional.ofNullable(Piece.copyOf(promotionPiece));
     }
 
     @Override
@@ -61,7 +72,7 @@ public class Move {
         return playerColor == other.playerColor &&
                 from.equals(other.from) &&
                 to.equals(other.to) &&
-                promotionPiece.equals(other.promotionPiece);
+                Objects.equals(promotionPiece, other.promotionPiece);
     }
 
     @Override

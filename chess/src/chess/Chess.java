@@ -1,13 +1,10 @@
 package chess;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Chess {
     public static void main(String[] args) {
         final List<Player> players = List.of(new Player(Color.WHITE), new Player(Color.BLACK));
-
-        final List<Move> moveHistory = new ArrayList<>();
 
         final Board board = new Board();
 
@@ -28,18 +25,15 @@ public class Chess {
 
                 try {
                     board.makeMove(move);
+                    break;
                 } catch (IllegalMoveException e) {
                     System.out.println("Illegal move: " + e.getMessage());
-                    continue;
                 }
-
-                moveHistory.add(move);
-                break;
             }
 
             if (board.checkmateIsPresent()) {
                 System.out.printf("%s won!", currentPlayer.getColor());
-                System.out.println(moveHistory);
+                System.out.println(board.getMoveHistory());
                 return;
             }
         }

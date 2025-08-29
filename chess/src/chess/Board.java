@@ -8,43 +8,38 @@ import chess.pieces.Piece;
 import chess.pieces.Queen;
 import chess.pieces.Rook;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class Board {
     final private int NUM_RANKS = 8;
     final private int NUM_FILES = 8;
 
-    final private Piece[][] pieces = new Piece[NUM_RANKS][NUM_FILES];
+    final private List<Move> moveHistory;
+    final private Piece[][] pieces;
 
     public Board() {
+        moveHistory = new ArrayList<>();
+        pieces = new Piece[NUM_RANKS][NUM_FILES];
+
         clear();
         setUpPieces();
+    }
+
+    private Board(List<Move> moveHistory,Piece[][] pieces) {
+        this.moveHistory = getCopyOf(moveHistory);
+        this.pieces = getCopyOf(pieces);
+    }
+
+    public static Board copyOf(Board other) {
+        return new Board(other.moveHistory, other.pieces);
     }
 
     // TODO: NEED TO IMPLEMENT
     public boolean checkmateIsPresent() {
         return false;
-    }
-
-    // TODO: NEED TO IMPLEMENT
-    public MoveValidationResult validateMove(Move move) {
-        final Square from = move.getFrom();
-
-        final Piece piece = getPieceAt(from);
-
-        if (piece == null) {
-            return MoveValidationResult.illegal("No piece is at " + from);
-        }
-
-        if (piece.getColor() != move.getPlayerColor()) {
-            return MoveValidationResult.illegal("Cannot move piece of different color");
-        }
-
-        if (!piece.getLegalMoves(this, from).contains(move)) {
-            return MoveValidationResult.illegal("Illegal move");
-        }
-
-        return MoveValidationResult.legal();
     }
 
     public void makeMove(Move move) throws IllegalMoveException {
@@ -53,14 +48,43 @@ public class Board {
             throw new IllegalMoveException(moveValidationResult.getReason());
         }
 
-        final Piece piece = removePieceAt(move.getFrom());
+        final Optional<Piece> pieceOptional = removePieceAt(move.getFrom());
+        if (pieceOptional.isEmpty()) {
+            throw new IllegalStateException("Expected piece at " + move.getFrom());
+        }
 
         final Optional<Piece> promotionPiece = move.getPromotionPiece();
         if (promotionPiece.isPresent()) {
             setPieceAt(move.getTo(), promotionPiece.get());
         } else {
-            setPieceAt(move.getTo(), piece);
+            setPieceAt(move.getTo(), pieceOptional.get());
         }
+
+        moveHistory.add(Move.copyOf(move));
+    }
+
+    public List<Move> getMoveHistory() {
+        return getCopyOf(moveHistory);
+    }
+
+    private List<Move> getCopyOf(List<Move> moveHistory) {
+        return moveHistory.stream().map(Move::copyOf).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private Piece[][] getCopyOf(Piece[][] pieces) {
+        final int numRanks = pieces.length;
+        final int numFiles = pieces[0].length;
+
+        Piece[][] copy = new Piece[numRanks][numFiles];
+
+        for (int rankIndex = 0; rankIndex < numRanks; rankIndex++) {
+            for (int fileIndex = 0; fileIndex < numFiles; fileIndex++) {
+                final Piece piece = pieces[rankIndex][fileIndex];
+                copy[rankIndex][fileIndex] = Piece.copyOf(piece);
+            }
+        }
+
+        return copy;
     }
 
     @Override
@@ -108,6 +132,10 @@ public class Board {
         setPieceAt(new Square("h1"), new Rook(Color.WHITE));
     }
 
+    public boolean kingIsUnderAttack(Color kingColor) {
+        return false;
+    }
+
     private void clear() {
         for (int rankIndex = 0; rankIndex < NUM_RANKS; rankIndex++) {
             for (int fileIndex = 0; fileIndex < NUM_FILES; fileIndex++) {
@@ -116,26 +144,26 @@ public class Board {
         }
     }
 
-    private Piece removePieceAt(Square square) {
-        final Piece piece = getPieceAt(square);
+    public Optional<Piece> removePieceAt(Square square) {
+        final Optional<Piece> piece = getPieceAt(square);
         setPieceAt(square, null);
         return piece;
     }
 
-    private Piece getPieceAt(Square square) {
+    public Optional<Piece> getPieceAt(Square square) {
         final int rankIndex = getRankIndex(square.getRank());
         final int fileIndex = getFileIndex(square.getFile());
-        return pieces[rankIndex][fileIndex];
+        return Optional.ofNullable(Piece.copyOf(pieces[rankIndex][fileIndex]));
     }
 
-    private void setPieceAt(Square square, Piece piece) {
+    public void setPieceAt(Square square, Piece piece) {
         final int rankIndex = getRankIndex(square.getRank());
         final int fileIndex = getFileIndex(square.getFile());
         setPieceAt(rankIndex, fileIndex, piece);
     }
 
     private void setPieceAt(int rankIndex, int fileIndex, Piece piece) {
-        pieces[rankIndex][fileIndex] = piece != null ? piece.clone() : null;
+        pieces[rankIndex][fileIndex] = piece != null ? Piece.copyOf(piece) : null;
     }
 
     private int getRankIndex(int rank) {
@@ -144,5 +172,27 @@ public class Board {
 
     private int getFileIndex(char file) {
         return (int)(file) - 'a';
+    }
+
+    private MoveValidationResult validateMove(Move move) {
+        final Square from = move.getFrom();
+
+        final Optional<Piece> pieceOptional = getPieceAt(from);
+
+        if (pieceOptional.isEmpty()) {
+            return MoveValidationResult.illegal("No piece is at " + from);
+        }
+
+        final Piece piece = pieceOptional.get();
+
+        if (piece.getColor() != move.getPlayerColor()) {
+            return MoveValidationResult.illegal("Cannot move piece of different color");
+        }
+
+        if (!piece.getLegalMoves(copyOf(this), from).contains(move)) {
+            return MoveValidationResult.illegal("Illegal move");
+        }
+
+        return MoveValidationResult.legal();
     }
 }

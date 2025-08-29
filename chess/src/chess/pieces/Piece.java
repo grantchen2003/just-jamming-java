@@ -8,13 +8,17 @@ import chess.Square;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class Piece implements Cloneable{
+public abstract class Piece {
     protected final Color color;
     private final char symbol;
 
     protected Piece(Color color, char symbol) {
         this.color = color;
         this.symbol = symbol;
+    }
+
+    public static Piece copyOf(Piece other) {
+        return other != null ? Piece.from(other.color, other.symbol) : null;
     }
 
     public static Piece from(Color color, char symbol) {
@@ -38,15 +42,6 @@ public abstract class Piece implements Cloneable{
     }
 
     public abstract List<Move> getLegalMoves(Board board, Square from);
-
-    @Override
-    public Piece clone() {
-        try {
-            return (Piece) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError("Clone not supported", e);
-        }
-    }
 
     @Override
     public boolean equals(Object obj) {
