@@ -38,7 +38,7 @@ public class PutHandler implements HttpHandler {
             return;
         }
 
-        this.store.put(key, value);
+        store.put(key, value);
 
         exchange.sendResponseHeaders(200, -1);
     }

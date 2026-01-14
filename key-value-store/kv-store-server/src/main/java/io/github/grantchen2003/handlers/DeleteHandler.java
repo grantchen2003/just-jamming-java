@@ -30,7 +30,7 @@ public class DeleteHandler implements HttpHandler {
 
         final String key = query.substring(4);
 
-        final Optional<String> value = this.store.removeKey(key);
+        final Optional<String> value = store.removeKey(key);
         if (value.isEmpty()) {
             exchange.sendResponseHeaders(404, -1);
             return;

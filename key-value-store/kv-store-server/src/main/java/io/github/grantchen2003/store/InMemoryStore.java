@@ -7,17 +7,22 @@ public class InMemoryStore implements Store {
     final HashMap<String, String> data = new HashMap<>();
 
     @Override
+    public int size() {
+        return data.size();
+    }
+
+    @Override
     public Optional<String> getValue(String key) {
-        return Optional.ofNullable(this.data.get(key));
+        return Optional.ofNullable(data.get(key));
     }
 
     @Override
     public void put(String key, String value) {
-        this.data.put(key, value);
+        data.put(key, value);
     }
 
     @Override
     public Optional<String> removeKey(String key) {
-        return Optional.ofNullable(this.data.remove(key));
+        return Optional.ofNullable(data.remove(key));
     }
 }

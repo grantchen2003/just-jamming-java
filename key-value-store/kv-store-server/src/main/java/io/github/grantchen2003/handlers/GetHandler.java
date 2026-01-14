@@ -31,7 +31,7 @@ public class GetHandler implements HttpHandler {
 
         final String key = query.substring(4);
 
-        final Optional<String> value = this.store.getValue(key);
+        final Optional<String> value = store.getValue(key);
         if (value.isEmpty()) {
             exchange.sendResponseHeaders(404, -1);
             return;
