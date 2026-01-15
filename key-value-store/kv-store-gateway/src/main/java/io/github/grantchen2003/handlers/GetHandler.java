@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 public class GetHandler extends AbstractShardHandler {
     public GetHandler(ShardRouter router) {
@@ -22,15 +23,14 @@ public class GetHandler extends AbstractShardHandler {
             return;
         }
 
-        final String query = exchange.getRequestURI().getQuery();
-        if (query == null || !query.startsWith("key=")) {
+        final Optional<String> keyOpt = extractKey(exchange.getRequestURI());
+        if (keyOpt.isEmpty()) {
             exchange.sendResponseHeaders(400, -1);
             return;
         }
 
-        final String key = query.substring(4);
+        final String key = keyOpt.get();
         final String shardIp = shardRouter.getShardIp(key);
-
         final String encodedKey = java.net.URLEncoder.encode(key, StandardCharsets.UTF_8);
         final URI shardUri = URI.create("http://" + shardIp + "/get?key=" + encodedKey);
         final HttpRequest request = HttpRequest.newBuilder()
@@ -52,5 +52,18 @@ public class GetHandler extends AbstractShardHandler {
         } catch (IOException e) {
             exchange.sendResponseHeaders(500, -1);
         }
+    }
+
+    private Optional<String> extractKey(URI requestUri) {
+        if (requestUri == null) {
+            return Optional.empty();
+        }
+
+        final String query = requestUri.getQuery();
+        if (query == null || !query.startsWith("key=")) {
+            return Optional.empty();
+        }
+
+        return Optional.of(query.substring(4));
     }
 }
