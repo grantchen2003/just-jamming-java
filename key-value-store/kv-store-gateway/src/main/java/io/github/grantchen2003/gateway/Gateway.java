@@ -1,6 +1,7 @@
 package io.github.grantchen2003.gateway;
 
 import com.sun.net.httpserver.HttpServer;
+import io.github.grantchen2003.handlers.DeleteHandler;
 import io.github.grantchen2003.handlers.GetHandler;
 import io.github.grantchen2003.handlers.PutHandler;
 
@@ -16,6 +17,7 @@ public class Gateway {
 
         server.createContext("/get", new GetHandler(shardIps));
         server.createContext("/put", new PutHandler(shardIps));
+        server.createContext("/delete", new DeleteHandler(shardIps));
 
         server.setExecutor(null);
         server.start();
