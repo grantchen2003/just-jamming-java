@@ -5,10 +5,10 @@ import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -36,31 +36,32 @@ public class GetHandler implements HttpHandler {
         final String key = query.substring(4);
         final String shardIp = getShardIp(key);
 
-        final String shardUrlStr = "http://" + shardIp + "/get?key=" + java.net.URLEncoder.encode(key, StandardCharsets.UTF_8);
-        final URL shardUrl;
-        try {
-            shardUrl = new URI(shardUrlStr).toURL();
-        } catch (URISyntaxException e) {
+        final HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://" + shardIp + "/get?key=" + java.net.URLEncoder.encode(key, StandardCharsets.UTF_8)))
+                .GET()
+                .build();
+
+        try (final HttpClient client = HttpClient.newHttpClient()){
+            final HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            final byte[] responseBody = response.body();
+
+            final int statusCode = response.statusCode();
+            System.out.println("GET " + request.uri() + " | Response: " + statusCode);
+
+            if (statusCode == 200) {
+                exchange.sendResponseHeaders(200, responseBody.length);
+                final OutputStream os = exchange.getResponseBody();
+                os.write(responseBody);
+                os.close();
+            } else {
+                exchange.sendResponseHeaders(statusCode, -1);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             exchange.sendResponseHeaders(500, -1);
-            return;
+        } catch (IOException e) {
+            exchange.sendResponseHeaders(500, -1);
         }
-
-        HttpURLConnection conn = (HttpURLConnection) shardUrl.openConnection();
-        conn.setRequestMethod("GET");
-
-        int responseCode = conn.getResponseCode();
-        System.out.println("GET " + shardUrl + " | Response: " + responseCode);
-        if (responseCode == 200) {
-            final String response = new String(conn.getInputStream().readAllBytes());
-            exchange.sendResponseHeaders(200, response.getBytes().length);
-            final OutputStream os = exchange.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-        } else if (responseCode == 404) {
-            exchange.sendResponseHeaders(404, -1);
-        }
-
-        conn.disconnect();
     }
 
     private String getShardIp(String key) {
