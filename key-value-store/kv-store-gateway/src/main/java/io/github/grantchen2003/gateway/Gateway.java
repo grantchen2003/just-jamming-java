@@ -9,6 +9,7 @@ import io.github.grantchen2003.routing.ShardRouter;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 public class Gateway {
     public static void main(String[] args) throws IOException {
@@ -21,9 +22,10 @@ public class Gateway {
         server.createContext("/put", new PutHandler(shardRouter));
         server.createContext("/delete", new DeleteHandler(shardRouter));
 
-        server.setExecutor(null);
-        server.start();
+        final int cores = Runtime.getRuntime().availableProcessors();
+        server.setExecutor(Executors.newFixedThreadPool(cores * 2));
 
+        server.start();
         System.out.println("Key-value store gateway started on port 8083");
     }
 }
