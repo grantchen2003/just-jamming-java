@@ -1,22 +1,18 @@
 package io.github.grantchen2003.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import io.github.grantchen2003.routing.ShardRouter;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
-public class GetHandler implements HttpHandler {
-    final List<String> shardIps;
-
-    public GetHandler(List<String> shardIps) {
-        this.shardIps = shardIps;
+public class GetHandler extends AbstractShardHandler {
+    public GetHandler(ShardRouter router) {
+        super(router);
     }
 
     @Override
@@ -27,46 +23,34 @@ public class GetHandler implements HttpHandler {
         }
 
         final String query = exchange.getRequestURI().getQuery();
-
-        if (!query.startsWith("key=")) {
+        if (query == null || !query.startsWith("key=")) {
             exchange.sendResponseHeaders(400, -1);
             return;
         }
 
         final String key = query.substring(4);
-        final String shardIp = getShardIp(key);
+        final String shardIp = shardRouter.getShardIp(key);
 
+        final String encodedKey = java.net.URLEncoder.encode(key, StandardCharsets.UTF_8);
+        final URI shardUri = URI.create("http://" + shardIp + "/get?key=" + encodedKey);
         final HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://" + shardIp + "/get?key=" + java.net.URLEncoder.encode(key, StandardCharsets.UTF_8)))
+                .uri(shardUri)
                 .GET()
                 .build();
 
-        try (final HttpClient client = HttpClient.newHttpClient()){
+        try {
             final HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
-            final byte[] responseBody = response.body();
-
-            final int statusCode = response.statusCode();
-            System.out.println("GET " + request.uri() + " | Response: " + statusCode);
-
-            if (statusCode == 200) {
-                exchange.sendResponseHeaders(200, responseBody.length);
-                final OutputStream os = exchange.getResponseBody();
-                os.write(responseBody);
-                os.close();
-            } else {
-                exchange.sendResponseHeaders(statusCode, -1);
+            exchange.sendResponseHeaders(response.statusCode(), response.body().length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(response.body());
             }
+
+            System.out.println("GET " + request.uri() + " | Response: " + response.statusCode());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             exchange.sendResponseHeaders(500, -1);
         } catch (IOException e) {
             exchange.sendResponseHeaders(500, -1);
         }
-    }
-
-    private String getShardIp(String key) {
-        final int keyHash = Math.abs(key.hashCode());
-        final int shardIndex = keyHash % shardIps.size();
-        return shardIps.get(shardIndex);
     }
 }
