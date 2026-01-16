@@ -1,22 +1,23 @@
-package io.github.grantchen2003.handlers;
+package io.github.grantchen2003.shard.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import io.github.grantchen2003.store.Store;
+import io.github.grantchen2003.shard.store.Store;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Optional;
 
-public class DeleteHandler implements HttpHandler {
+public class GetHandler implements HttpHandler {
     final Store store;
-    public DeleteHandler(Store store) {
+
+    public GetHandler(Store store) {
         this.store = store;
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        if (!exchange.getRequestMethod().equalsIgnoreCase("DELETE")) {
+        if (!exchange.getRequestMethod().equalsIgnoreCase("GET")) {
             exchange.sendResponseHeaders(405, -1);
             return;
         }
@@ -30,7 +31,7 @@ public class DeleteHandler implements HttpHandler {
 
         final String key = query.substring(4);
 
-        final Optional<String> value = store.removeKey(key);
+        final Optional<String> value = store.getValue(key);
         if (value.isEmpty()) {
             exchange.sendResponseHeaders(404, -1);
             return;

@@ -1,4 +1,4 @@
-package io.github.grantchen2003.store;
+package io.github.grantchen2003.shard.store;
 
 import java.util.HashMap;
 import java.util.Optional;

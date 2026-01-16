@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.grantchen2003</groupId>
-    <artifactId>kv-store-server</artifactId>
+    <artifactId>kv-store-shard</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -38,7 +38,7 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>io.github.grantchen2003.server.Server</mainClass>
+                                    <mainClass>io.github.grantchen2003.shard.Main</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

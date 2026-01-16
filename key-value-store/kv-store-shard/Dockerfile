@@ -17,7 +17,7 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # Copy the built JAR from the build stage
-COPY --from=builder /app/target/kv-store-server-1.0-SNAPSHOT.jar app.jar
+COPY --from=builder /app/target/kv-store-shard-1.0-SNAPSHOT.jar app.jar
 
 # Expose your server port (change if your server uses a different one)
 EXPOSE 8080

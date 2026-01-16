@@ -1,8 +1,8 @@
-package io.github.grantchen2003.handlers;
+package io.github.grantchen2003.shard.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import io.github.grantchen2003.store.Store;
+import io.github.grantchen2003.shard.store.Store;
 
 import java.io.IOException;
 import java.io.OutputStream;

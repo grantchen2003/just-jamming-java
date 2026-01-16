@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  kv-store-shard-1:
+    build: .
+    ports:
+      - "8080:8080"
+  kv-store-shard-2:
+    build: .
+    ports:
+      - "8081:8080"
