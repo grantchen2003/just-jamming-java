@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.grantchen2003</groupId>
-    <artifactId>kv-store-gateway</artifactId>
+    <artifactId>kv-store-request-router</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>

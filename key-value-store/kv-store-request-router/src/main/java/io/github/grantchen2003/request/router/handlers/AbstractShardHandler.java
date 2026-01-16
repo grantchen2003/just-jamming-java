@@ -1,7 +1,7 @@
-package io.github.grantchen2003.handlers;
+package io.github.grantchen2003.request.router.handlers;
 
 import com.sun.net.httpserver.HttpHandler;
-import io.github.grantchen2003.routing.ShardRouter;
+import io.github.grantchen2003.request.router.ShardRouter;
 
 import java.net.http.HttpClient;
 
